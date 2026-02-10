@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dev-vnc"
+version = "1.0.0"
+description = "通用开发用远程桌面服务 - 用于 SSH 远程连接时的 GUI 应用调试"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Henry", email = "henry@example.com"}
+]
+keywords = ["vnc", "remote-desktop", "development", "gui", "novnc", "xvfb"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Desktop Environment",
+    "Topic :: System :: Systems Administration",
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "isort>=5.0",
+    "mypy>=1.0",
+]
+
+[project.scripts]
+devvnc = "devvnc.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/HenryHenry-Space/dev-vnc"
+Repository = "https://github.com/HenryHenry-Space/dev-vnc"
+Documentation = "https://github.com/HenryHenry-Space/dev-vnc/blob/main/README.md"
+
+[tool.setuptools.packages.find]
+include = ["devvnc*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py38", "py39", "py310", "py311", "py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
