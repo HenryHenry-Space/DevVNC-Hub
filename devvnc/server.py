@@ -3,7 +3,6 @@ Dev VNC Server - 服务器核心实现 / Core server implementation
 """
 
 import os
-import signal
 import socket
 import subprocess
 import time
@@ -80,63 +79,63 @@ class DevVNCServer:
     def start(self) -> bool:
         """启动服务 / Start the service"""
         if self.is_running():
-            print("⚠️  服务已在运行")
+            print("⚠️  服务已在运行 / Service is already running")
             return True
         
         self.config.ensure_dirs()
         self._check_dependencies()
         self._setup_vnc_password()
         
-        print("\n🚀 启动远程桌面服务...\n")
+        print("\n🚀 启动远程桌面服务... / Starting remote desktop service...\n")
         
-    # 清理旧进程 / Clean up old processes
+        # 清理旧进程 / Clean up old processes
         self._cleanup()
         time.sleep(1)
         
         try:
             # 1. 启动 Xvfb / Start Xvfb
-            print(f"📺 启动虚拟显示器 (Display :{self.config.display_num})...")
+            print(f"📺 启动虚拟显示器 (Display :{self.config.display_num})... / Starting virtual display")
             self._start_xvfb()
             time.sleep(2)
             
             # 2. 启动窗口管理器 / Start window manager
-            print(f"🪟 启动窗口管理器 ({self.config.window_manager})...")
+            print(f"🪟 启动窗口管理器 ({self.config.window_manager})... / Starting window manager")
             self._start_window_manager()
             time.sleep(1)
             
             # 3. 启动 VNC / Start VNC
-            print(f"🔌 启动 VNC 服务器 (端口 {self.config.vnc_port})...")
+            print(f"🔌 启动 VNC 服务器 (端口 {self.config.vnc_port})... / Starting VNC server")
             self._start_vnc()
             time.sleep(1)
             
             # 4. 启动 noVNC / Start noVNC
-            print(f"🌐 启动 noVNC Web 服务器 (端口 {self.config.novnc_port})...")
+            print(f"🌐 启动 noVNC Web 服务器 (端口 {self.config.novnc_port})... / Starting noVNC web server")
             self._start_novnc()
             time.sleep(1)
             
             # 保存 PID / Save PID
             self.config.pid_file.write_text(str(os.getpid()))
             
-            print("\n✅ 远程桌面服务已成功启动！")
+            print("\n✅ 远程桌面服务已成功启动！ / Remote desktop service started!")
             self.show_info()
             return True
             
         except Exception as e:
-            print(f"\n❌ 启动失败: {e}")
+            print(f"\n❌ 启动失败: {e} / Start failed")
             self._cleanup()
             return False
     
     def stop(self) -> bool:
         """停止服务 / Stop the service"""
-        print("\n🛑 停止远程桌面服务...")
+        print("\n🛑 停止远程桌面服务... / Stopping remote desktop service...")
         
         self._cleanup()
         
-    # 清理 PID 文件 / Clean PID files
+        # 清理 PID 文件 / Clean PID files
         for pid_file in self.config.run_dir.glob("*.pid"):
             pid_file.unlink(missing_ok=True)
         
-        print("✅ 远程桌面服务已停止")
+        print("✅ 远程桌面服务已停止 / Remote desktop service stopped")
         return True
     
     def restart(self) -> bool:
@@ -165,8 +164,8 @@ class DevVNCServer:
         
         if missing:
             raise RuntimeError(
-                f"缺少依赖: {', '.join(missing)}\n"
-                f"请运行: dev-vnc install-deps"
+                f"缺少依赖: {', '.join(missing)} / Missing dependencies\n"
+                f"请运行: dev-vnc install-deps / Please run: dev-vnc install-deps"
             )
     
     def _command_exists(self, cmd: str) -> bool:
@@ -186,7 +185,7 @@ class DevVNCServer:
         
         if not passwd_file.exists():
             try:
-                result = subprocess.run(
+                subprocess.run(
                     ["x11vnc", "-storepasswd", self.config.password, str(passwd_file)],
                     capture_output=True,
                     text=True,
@@ -259,7 +258,7 @@ class DevVNCServer:
                 break
         
         if not novnc_path:
-            print("⚠️  noVNC 未找到，仅提供 VNC 连接")
+            print("⚠️  noVNC 未找到，仅提供 VNC 连接 / noVNC not found, VNC only")
             return
         
         log_file = self.config.log_dir / "websockify.log"
@@ -301,22 +300,23 @@ class DevVNCServer:
         print("""
 ╔══════════════════════════════════════════════════════════════╗
 ║                 🖥️  远程桌面访问信息                         ║
+║                 🖥️  Remote Desktop Access                    ║
 ╚══════════════════════════════════════════════════════════════╝
 """)
-        print(f"  📍 浏览器访问 (推荐):")
+        print("  📍 浏览器访问 (推荐) / Browser access (recommended):")
         print(f"     http://{local_ip}:{self.config.novnc_port}/vnc.html")
-        print(f"     http://localhost:{self.config.novnc_port}/vnc.html (本机)")
+        print(f"     http://localhost:{self.config.novnc_port}/vnc.html (本机 / local)")
         print()
-        print(f"  🔌 VNC 客户端连接:")
-        print(f"     地址: {local_ip}:{self.config.vnc_port}")
-        print(f"     密码: {self.config.password}")
+        print("  🔌 VNC 客户端连接 / VNC client:")
+        print(f"     地址 / Address: {local_ip}:{self.config.vnc_port}")
+        print(f"     密码 / Password: {self.config.password}")
         print()
-        print(f"  🚀 在远程桌面中运行 GUI 程序:")
+        print("  🚀 在远程桌面中运行 GUI 程序 / Run GUI apps in remote desktop:")
         print(f"     export DISPLAY={self.config.display}")
-        print(f"     your-gui-application")
+        print("     your-gui-application")
         print()
-        print(f"  💡 快捷命令:")
-        print(f"     devvnc run <command>")
+        print("  💡 快捷命令 / Quick command:")
+        print("     devvnc run <command>")
         print()
     
     def show_status(self) -> None:
@@ -326,11 +326,12 @@ class DevVNCServer:
         print("""
 ╔══════════════════════════════════════════════════════════════╗
 ║                    📊 服务状态                              ║
+║                    📊 Service Status                         ║
 ╚══════════════════════════════════════════════════════════════╝
 """)
         
         def status_icon(running: bool) -> str:
-            return "✅ 运行中" if running else "❌ 未运行"
+            return "✅ 运行中 / Running" if running else "❌ 未运行 / Stopped"
         
         print(f"  Xvfb:           {status_icon(status['xvfb'])}")
         print(f"  x11vnc:         {status_icon(status['x11vnc'])}")
@@ -343,6 +344,7 @@ class DevVNCServer:
         print("""
 ╔══════════════════════════════════════════════════════════════╗
 ║                    ⚙️  当前配置                              ║
+║                    ⚙️  Current Configuration                  ║
 ╚══════════════════════════════════════════════════════════════╝
 """)
         for key, value in self.config.to_dict().items():
@@ -354,19 +356,19 @@ class DevVNCServer:
         if log_type in ("vnc", "all"):
             vnc_log = self.config.log_dir / "x11vnc.log"
             if vnc_log.exists():
-                print("=== VNC 日志 ===")
+                print("=== VNC 日志 / VNC Logs ===")
                 print(vnc_log.read_text()[-5000:])  # 最后 5000 字符 / Last 5000 chars
         
         if log_type in ("novnc", "all"):
             novnc_log = self.config.log_dir / "websockify.log"
             if novnc_log.exists():
-                print("\n=== noVNC 日志 ===")
+                print("\n=== noVNC 日志 / noVNC Logs ===")
                 print(novnc_log.read_text()[-5000:])
     
     def run_command(self, command: List[str]) -> int:
         """在 VNC 环境中运行命令 / Run command in VNC environment"""
         if not self.is_running():
-            print("❌ 服务未运行，请先执行: devvnc start")
+            print("❌ 服务未运行，请先执行: devvnc start / Service not running, run: devvnc start")
             return 1
         
         env = os.environ.copy()

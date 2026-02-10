@@ -59,12 +59,12 @@ init_dirs() {
 # 设置 VNC 密码 / Set VNC password
 setup_vnc_password() {
     if [ ! -f "$HOME/.vnc/passwd" ]; then
-        log_step "设置 VNC 密码..."
+    log_step "设置 VNC 密码... / Setting VNC password..."
     # 使用 x11vnc 的 storepasswd 或手动创建 / Use x11vnc storepasswd or create manually
         if command -v x11vnc &> /dev/null; then
             echo "$VNC_PASSWORD" | x11vnc -storepasswd - "$HOME/.vnc/passwd"
         else
-            log_warn "x11vnc 未安装，无法设置密码"
+            log_warn "x11vnc 未安装，无法设置密码 / x11vnc not installed, cannot set password"
         fi
     fi
 }
@@ -104,12 +104,12 @@ check_dependencies() {
     esac
     
     if [ ${#missing_deps[@]} -ne 0 ]; then
-        log_error "缺少依赖: ${missing_deps[*]}"
+    log_error "缺少依赖: ${missing_deps[*]} / Missing dependencies"
         echo ""
-        echo "请运行以下命令安装依赖:"
+    echo "请运行以下命令安装依赖 / Please install dependencies with:"
         echo "  sudo apt install ${missing_deps[*]}"
         echo ""
-        echo "或运行安装脚本:"
+    echo "或运行安装脚本 / Or run the install script:"
         echo "  dev-vnc install-deps"
         exit 1
     fi
@@ -145,7 +145,7 @@ save_pid() {
 # 启动服务 / Start service
 start_desktop() {
     if check_running; then
-        log_warn "桌面服务已在运行"
+    log_warn "桌面服务已在运行 / Service already running"
         show_status
         return 0
     fi
@@ -157,6 +157,7 @@ start_desktop() {
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
     echo "║              🚀 Dev VNC Server 启动中...                     ║"
+    echo "║              🚀 Starting Dev VNC Server...                   ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo ""
     
@@ -165,7 +166,7 @@ start_desktop() {
     sleep 1
     
     # 1. 启动虚拟显示器 / Start virtual display
-    log_step "启动虚拟显示器 (Display :$DISPLAY_NUM, 分辨率 $RESOLUTION)..."
+    log_step "启动虚拟显示器 (Display :$DISPLAY_NUM, 分辨率 $RESOLUTION)... / Starting virtual display..."
     Xvfb :$DISPLAY_NUM -screen 0 $RESOLUTION &
     save_pid "xvfb" $!
     sleep 2
@@ -174,7 +175,7 @@ start_desktop() {
     export DISPLAY=:$DISPLAY_NUM
     
     # 2. 启动窗口管理器 / Start window manager
-    log_step "启动窗口管理器 ($WINDOW_MANAGER)..."
+    log_step "启动窗口管理器 ($WINDOW_MANAGER)... / Starting window manager..."
     case "$WINDOW_MANAGER" in
         fluxbox)
             fluxbox &
@@ -193,7 +194,7 @@ start_desktop() {
     sleep 1
     
     # 3. 启动 VNC 服务器 / Start VNC server
-    log_step "启动 VNC 服务器 (端口 $VNC_PORT)..."
+    log_step "启动 VNC 服务器 (端口 $VNC_PORT)... / Starting VNC server..."
     x11vnc -display :$DISPLAY_NUM \
            -forever \
            -shared \
@@ -204,7 +205,7 @@ start_desktop() {
     sleep 1
     
     # 4. 启动 noVNC (Web 访问) / Start noVNC (web access)
-    log_step "启动 noVNC Web 服务器 (端口 $NOVNC_PORT)..."
+    log_step "启动 noVNC Web 服务器 (端口 $NOVNC_PORT)... / Starting noVNC web server..."
     
     # 查找 novnc 路径 / Find novnc path
     NOVNC_PATH=""
@@ -218,9 +219,9 @@ start_desktop() {
     if [ -n "$NOVNC_PATH" ]; then
         websockify --web="$NOVNC_PATH" $NOVNC_PORT localhost:$VNC_PORT > "$LOG_DIR/websockify.log" 2>&1 &
         save_pid "novnc" $!
-        log_info "noVNC 已启动"
+    log_info "noVNC 已启动 / noVNC started"
     else
-        log_warn "noVNC 未找到，仅提供 VNC 连接"
+    log_warn "noVNC 未找到，仅提供 VNC 连接 / noVNC not found, VNC only"
     fi
     
     # 保存主 PID / Save main PID
@@ -228,21 +229,21 @@ start_desktop() {
     
     sleep 2
     echo ""
-    log_info "远程桌面服务已成功启动！"
+    log_info "远程桌面服务已成功启动！ / Remote desktop service started!"
     show_access_info
 }
 
 # 停止服务 / Stop service
 stop_desktop() {
     echo ""
-    log_step "停止远程桌面服务..."
+    log_step "停止远程桌面服务... / Stopping remote desktop service..."
     
     cleanup_processes
     
     # 清理 PID 文件 / Clean PID files
     rm -f "$RUN_DIR"/*.pid
     
-    log_info "远程桌面服务已停止"
+    log_info "远程桌面服务已停止 / Remote desktop service stopped"
 }
 
 # 清理进程 / Clean processes
@@ -259,6 +260,7 @@ show_status() {
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
     echo "║                    📊 服务状态                              ║"
+    echo "║                    📊 Service Status                         ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo ""
     
@@ -307,29 +309,30 @@ show_access_info() {
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
     echo "║                 🖥️  远程桌面访问信息                         ║"
+    echo "║                 🖥️  Remote Desktop Access                    ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo ""
     echo -e "  ${CYAN}📍 浏览器访问 (推荐):${NC}"
     echo "     http://$LOCAL_IP:$NOVNC_PORT/vnc.html"
-    echo "     http://localhost:$NOVNC_PORT/vnc.html (本机)"
+    echo "     http://localhost:$NOVNC_PORT/vnc.html (本机 / local)"
     echo ""
     echo -e "  ${CYAN}🔌 VNC 客户端连接:${NC}"
-    echo "     地址: $LOCAL_IP:$VNC_PORT"
-    echo "     密码: $VNC_PASSWORD"
+    echo "     地址 / Address: $LOCAL_IP:$VNC_PORT"
+    echo "     密码 / Password: $VNC_PASSWORD"
     echo ""
     echo -e "  ${CYAN}🚀 在远程桌面中运行 GUI 程序:${NC}"
     echo "     export DISPLAY=:$DISPLAY_NUM"
     echo "     your-gui-application"
     echo ""
     echo -e "  ${CYAN}💡 快捷命令:${NC}"
-    echo "     dev-vnc run <command>  # 在 VNC 环境中运行命令"
+    echo "     dev-vnc run <command>  # 在 VNC 环境中运行命令 / Run in VNC"
     echo ""
 }
 
 # 在 VNC 环境中运行命令 / Run command in VNC environment
 run_in_vnc() {
     if ! check_running; then
-        log_error "桌面服务未运行，请先执行: dev-vnc start"
+    log_error "桌面服务未运行，请先执行: dev-vnc start / Service not running, run: dev-vnc start"
         exit 1
     fi
     
@@ -346,26 +349,26 @@ show_logs() {
             if [ -f "$LOG_DIR/x11vnc.log" ]; then
                 cat "$LOG_DIR/x11vnc.log"
             else
-                log_warn "VNC 日志文件不存在"
+                log_warn "VNC 日志文件不存在 / VNC log not found"
             fi
             ;;
         novnc)
             if [ -f "$LOG_DIR/websockify.log" ]; then
                 cat "$LOG_DIR/websockify.log"
             else
-                log_warn "noVNC 日志文件不存在"
+                log_warn "noVNC 日志文件不存在 / noVNC log not found"
             fi
             ;;
         all)
-            echo "=== VNC 日志 ==="
+            echo "=== VNC 日志 / VNC Logs ==="
             [ -f "$LOG_DIR/x11vnc.log" ] && tail -n 20 "$LOG_DIR/x11vnc.log"
             echo ""
-            echo "=== noVNC 日志 ==="
+            echo "=== noVNC 日志 / noVNC Logs ==="
             [ -f "$LOG_DIR/websockify.log" ] && tail -n 20 "$LOG_DIR/websockify.log"
             ;;
         *)
-            log_error "未知日志类型: $log_type"
-            echo "可用: vnc, novnc, all"
+            log_error "未知日志类型: $log_type / Unknown log type"
+            echo "可用: vnc, novnc, all / Available: vnc, novnc, all"
             ;;
     esac
 }
@@ -373,32 +376,32 @@ show_logs() {
 # 显示帮助 / Show help
 show_help() {
     echo ""
-    echo "Dev VNC Server - 通用开发用远程桌面服务"
+    echo "Dev VNC Server - 通用开发用远程桌面服务 / Remote desktop service"
     echo ""
-    echo "用法: dev-vnc <命令> [选项]"
+    echo "用法 / Usage: dev-vnc <命令> [选项]"
     echo ""
-    echo "命令:"
-    echo "  start           启动远程桌面服务"
-    echo "  stop            停止远程桌面服务"
-    echo "  restart         重启远程桌面服务"
-    echo "  status          显示服务状态"
-    echo "  info            显示访问信息"
-    echo "  logs [type]     显示日志 (vnc/novnc/all)"
-    echo "  run <cmd>       在 VNC 环境中运行命令"
-    echo "  install-deps    安装依赖"
-    echo "  config          显示当前配置"
-    echo "  help            显示此帮助信息"
+    echo "命令 / Commands:"
+    echo "  start           启动远程桌面服务 / Start remote desktop"
+    echo "  stop            停止远程桌面服务 / Stop remote desktop"
+    echo "  restart         重启远程桌面服务 / Restart service"
+    echo "  status          显示服务状态 / Show status"
+    echo "  info            显示访问信息 / Show access info"
+    echo "  logs [type]     显示日志 (vnc/novnc/all) / Show logs"
+    echo "  run <cmd>       在 VNC 环境中运行命令 / Run in VNC"
+    echo "  install-deps    安装依赖 / Install dependencies"
+    echo "  config          显示当前配置 / Show configuration"
+    echo "  help            显示此帮助信息 / Show help"
     echo ""
-    echo "环境变量:"
-    echo "  DEV_VNC_DISPLAY        显示器编号 (默认: 99)"
-    echo "  DEV_VNC_PORT           VNC 端口 (默认: 5999)"
-    echo "  DEV_VNC_NOVNC_PORT     noVNC 端口 (默认: 6080)"
-    echo "  DEV_VNC_RESOLUTION     分辨率 (默认: 1920x1080x24)"
-    echo "  DEV_VNC_PASSWORD       VNC 密码 (默认: devvnc123)"
-    echo "  DEV_VNC_WM             窗口管理器 (默认: fluxbox)"
-    echo "  DEV_VNC_CONFIG         配置文件路径"
+    echo "环境变量 / Environment variables:"
+    echo "  DEV_VNC_DISPLAY        显示器编号 (默认: 99) / Display number"
+    echo "  DEV_VNC_PORT           VNC 端口 (默认: 5999) / VNC port"
+    echo "  DEV_VNC_NOVNC_PORT     noVNC 端口 (默认: 6080) / noVNC port"
+    echo "  DEV_VNC_RESOLUTION     分辨率 (默认: 1920x1080x24) / Resolution"
+    echo "  DEV_VNC_PASSWORD       VNC 密码 (默认: devvnc123) / VNC password"
+    echo "  DEV_VNC_WM             窗口管理器 (默认: fluxbox) / Window manager"
+    echo "  DEV_VNC_CONFIG         配置文件路径 / Config path"
     echo ""
-    echo "示例:"
+    echo "示例 / Examples:"
     echo "  dev-vnc start"
     echo "  dev-vnc run python my_gui_app.py"
     echo "  DEV_VNC_RESOLUTION=2560x1440x24 dev-vnc restart"
@@ -410,6 +413,7 @@ show_config() {
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
     echo "║                    ⚙️  当前配置                              ║"
+    echo "║                    ⚙️  Current Configuration                  ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo ""
     echo "  Display:        :$DISPLAY_NUM"
@@ -425,7 +429,7 @@ show_config() {
 
 # 安装依赖 / Install dependencies
 install_deps() {
-    log_step "安装依赖..."
+    log_step "安装依赖... / Installing dependencies..."
     
     if command -v apt &> /dev/null; then
         sudo apt update
@@ -435,11 +439,11 @@ install_deps() {
     elif command -v pacman &> /dev/null; then
         sudo pacman -S --noconfirm xorg-server-xvfb x11vnc fluxbox novnc python-websockify
     else
-        log_error "不支持的包管理器，请手动安装依赖"
+    log_error "不支持的包管理器，请手动安装依赖 / Unsupported package manager, install manually"
         exit 1
     fi
     
-    log_info "依赖安装完成"
+    log_info "依赖安装完成 / Dependencies installed"
 }
 
 # 主命令处理 / Main command dispatch
@@ -478,7 +482,7 @@ case "${1:-help}" in
         show_help
         ;;
     *)
-        log_error "未知命令: $1"
+    log_error "未知命令: $1 / Unknown command: $1"
         show_help
         exit 1
         ;;

@@ -112,7 +112,7 @@ def main(args: Optional[List[str]] = None) -> int:
     
     elif parsed.command == "run":
         if not parsed.cmd:
-            print("❌ 请指定要运行的命令")
+            print("❌ 请指定要运行的命令 / Please specify a command to run")
             return 1
         return server.run_command(parsed.cmd)
     
